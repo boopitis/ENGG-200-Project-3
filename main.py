@@ -1,6 +1,5 @@
-print('i')
-
-from machine import I2C, Pin, SPI, ADC
+from utility import Utility
+from machine import I2C, Pin, SPI, ADC, PWM
 from imu import MPU6050
 from neopixel import Neopixel
 import tm1637
@@ -8,10 +7,19 @@ from ili9341 import Display, color565
 import sdcard
 import os
 from hcsr04 import HCSR04
-import utility
+from xglcd_font import XglcdFont
+from wavePlayer import wavePlayer
+from servo import Servo
 import time
 
-print('i')
+print('Initializing Components')
+
+# Initialize Utility
+TNR = XglcdFont('TimesNR28x25.h', 28, 25)
+ut = Utility(TNR)
+
+# Initialize Speaker
+player = wavePlayer(Pin(10), Pin(11))
 
 # Initialize Segment Display
 tm = tm1637.TM1637(clk=Pin(20), dio=Pin(19))
@@ -54,6 +62,14 @@ led = Pin('LED', Pin.OUT)
 baseline = 29000 # You may need to change this, but your mic should be reading around here as a baseline. 
 variability = 0.1 # By being more selective about what we conside a spike, we can filter out noise. 10% is a good base level for a quiet room. 
 
+# Initialize Servo
+sg90_servo = Servo(pin = 18)
+
+# Initialize Button
+button = Pin(22, Pin.IN, Pin.PULL_DOWN)
+
+print('Finished Initializing')
+
 red = (255, 0, 0)
 orange = (255, 50, 0)
 yellow = (255, 100, 0)
@@ -84,7 +100,6 @@ tm.show('0420', True)
 
 while True:
     strip.rotate_right(1)
-    time.sleep(0.1)
     strip.show()
     
     try:
@@ -99,11 +114,8 @@ while True:
     else:
         led.off() # Otherwise, keep the light off
     
-#     # print all values
-#     print('Accelerometer',(imu.accel.xyz))
-#     print('Gyroscope',(imu.gyro.xyz))
-#     print('Temperature',(imu.temperature))
-# 
-#     #print a single value, e.g. x value of acceleration
-#     print(imu.accel.x)
-#     time.sleep(1)
+    x1 = adc.read_u16()
+    x = (x1/65535) * 180
+    sg90_servo.move(x)
+    
+    time.sleep(0.1)
