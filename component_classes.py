@@ -13,10 +13,10 @@ import time
 
 class Components:
     
-    def __init__(self, speaker_left_pin=10, speaker_right_pin=11, segment_display_clk_pin=20, segment_display_dio_pin=19, 
-                 ring_light_pin=21, sd_sck_pin=2, sd_mosi_pin=3, sd_miso_pin=4, sd_pin=5, lcd_sck_pin=14, lcd_mosi_pin=15, 
-                 lcd_dc_pin=6, lcd_cs_pin=17, lcd_rst_pin=7, ultrasonic_trigger_pin=0, ultrasonic_echo_pin=1, potentiometer_pin=26, 
-                 microphone_pin=28, servo_pin=18, button_pin=22):
+    def __init__(self, speaker_left_pin=None, speaker_right_pin=None, segment_display_clk_pin=None, segment_display_dio_pin=None, 
+                 ring_light_pin=None, sd_sck_pin=None, sd_mosi_pin=None, sd_miso_pin=None, sd_pin=None, lcd_sck_pin=None, lcd_mosi_pin=None, 
+                 lcd_dc_pin=None, lcd_cs_pin=None, lcd_rst_pin=None, ultrasonic_trigger_pin=None, ultrasonic_echo_pin=None, potentiometer_pin=None, 
+                 microphone_pin=None, servo_pin=None, button_pin=None):
         self.speaker_left_pin = speaker_left_pin
         self.speaker_right_pin = speaker_right_pin
         self.segment_display_clk_pin = segment_display_clk_pin
@@ -41,65 +41,95 @@ class Components:
 
     # Initialize Speaker
     def speaker(self):
-        return wavePlayer(Pin(self.speaker_left_pin), Pin(self.speaker_right_pin))
+        if self.speaker_left_pin != None and self.speaker_right_pin != None:
+            return wavePlayer(Pin(self.speaker_left_pin), Pin(self.speaker_right_pin))
+        else:
+            raise ValueError("One of the Speaker pins has not been defined.")
 
 
     # Initialize Segment Display
     def segment_display(self):
-        return tm1637.TM1637(clk=Pin(20), dio=Pin(19))
+        if self.segment_display_clk_pin != None and self.segment_display_dio_pin:
+            return tm1637.TM1637(clk=Pin(20), dio=Pin(19))
+        else:
+            raise ValueError("One of the Segment Display pins has not been defined")
 
     # Initialize Ring Light
     def ring_light(self, default_brightness=10, number_of_leds=8):
-        strip = Neopixel(number_of_leds, 1, self.ring_light_pin, "GRB")
-        strip.brightness(default_brightness)
+        if self.ring_light_pin != None:
+            strip = Neopixel(number_of_leds, 1, self.ring_light_pin, "GRB")
+            strip.brightness(default_brightness)
 
-        return strip
+            return strip
+        else:
+            raise ValueError("One of the Ring Light pins has not been defined")
 
     # Initialize SD card
     def sd_card(self, baudrate=40000000):
-        spi=SPI(0,baudrate=baudrate,sck=Pin(self.sd_sck_pin),mosi=Pin(self.sd_mosi_pin),miso=Pin(self.sd_miso_pin))
-        sd=sdcard.SDCard(spi,Pin(self.sd_pin))
-        vfs=os.VfsFat(sd)
-        os.mount(sd,'/sd')
-        print(os.listdir('/sd'))
+        if self.sd_sck_pin != None and self.sd_mosi_pin != None and self.sd_miso_pin != None and self.sd_pin != None:
+            spi=SPI(0,baudrate=baudrate,sck=Pin(self.sd_sck_pin),mosi=Pin(self.sd_mosi_pin),miso=Pin(self.sd_miso_pin))
+            sd=sdcard.SDCard(spi,Pin(self.sd_pin))
+            vfs=os.VfsFat(sd)
+            os.mount(sd,'/sd')
+            print(os.listdir('/sd'))
 
-        return sd
+            return sd
+        else:
+            raise ValueError("One of the SD card pins has not been defined")
 
     # Initialize LCD Display
     def lcd_display(self, baudrate=40000000):
-        spi = SPI(1, baudrate=baudrate, sck=Pin(self.lcd_sck_pin), mosi=Pin(self.lcd_mosi_pin))
-        display = Display(spi, dc=Pin(self.lcd_dc_pin), cs=Pin(self.lcd_cs_pin), rst=Pin(self.lcd_rst_pin))
-        display.clear()
+        if self.lcd_sck_pin != None and self.lcd_mosi_pin != None and self.lcd_dc_pin != None and self.lcd_cs_pin != None and self.lcd_rst_pin != None:
+            spi = SPI(1, baudrate=baudrate, sck=Pin(self.lcd_sck_pin), mosi=Pin(self.lcd_mosi_pin))
+            display = Display(spi, dc=Pin(self.lcd_dc_pin), cs=Pin(self.lcd_cs_pin), rst=Pin(self.lcd_rst_pin))
+            display.clear()
 
-        return display
+            return display
+        else:
+            raise ValueError("One of the LCD Display pins has not been defined")
 
     # Initialize Ultrasonic Sensor
     def ultrasonic_sensor(self):
-        return HCSR04(trigger_pin=self.ultrasonic_trigger_pin, echo_pin=self.ultrasonic_echo_pin)
+        if self.ultrasonic_trigger_pin != None and self.ultrasonic_echo_pin != None:
+            return HCSR04(trigger_pin=self.ultrasonic_trigger_pin, echo_pin=self.ultrasonic_echo_pin)
+        else:
+            raise ValueError("One of the Ultrasonic Sensor pins has not been defined")
             
 
     # Initialize Potentiometer
-    def potentiometer(self) -> ADC:
-        adc = ADC(Pin(self.potentiometer_pin))
-        return adc
+    def potentiometer(self):
+        if self.potentiometer_pin != None:
+            adc = ADC(Pin(self.potentiometer_pin))
+            return adc
+        else:
+            raise ValueError("The Potentiometer pin has not been defined")
 
     # Initialize Microphone
     def microphone(self):
-        return ADC(self.microphone_pin) # Pin where sensor device (Microphone) is connected
+        if self.microphone_pin != None:
+            return ADC(self.microphone_pin) # Pin where sensor device (Microphone) is connected
+        else:
+            raise ValueError("The Microphone pin has not been defined")
   
 
     # Initialize Servo
     def servo(self):
-        return Servo(pin = self.servo_pin)
+        if self.servo_pin != None:
+            return Servo(pin = self.servo_pin)
+        else:
+            raise ValueError("The Servo pin has not been defined")
 
     # Initialize Button
     def button(self, is_PULL_DOWN=True):
-        if is_PULL_DOWN:
-            pin_type = Pin.PULL_DOWN
-        else:
-            pin_type = Pin.PULL_UP
+        if self.button_pin != None:
+            if is_PULL_DOWN:
+                pin_type = Pin.PULL_DOWN
+            else:
+                pin_type = Pin.PULL_UP
 
-        return Pin(self.button_pin, Pin.IN, pin_type)
+            return Pin(self.button_pin, Pin.IN, pin_type)
+        else:
+            raise ValueError("The Button pin has not been defined")
         
     # Initialize Gyroscope/Accelerometer, 
     # TODO: Will need to add pins as parameters in the class.
