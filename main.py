@@ -152,12 +152,17 @@ main_menu_list = [c_menu]
 main_menu_lists = [c_menu_list]
 
 timer = 0
-button_toggle = True
+tenths = 0
+
 selection = 0
 program = 0
+program_complete = True
 exercise_goal = 2
 exercises_done = 2
 exercise_complete = True
+
+ring_light.fill(red)
+ring_light.show()
 
 while (selection != -1):
 #     ring_light.rotate_right(1)
@@ -175,37 +180,64 @@ while (selection != -1):
     else:
         led.off() # Otherwise, keep the light off
     
-    x1 = potentiometer.read_u16()
-    x = (x1/65535) * 180
-    servo.move(x)
+#     x1 = potentiometer.read_u16()
+#     x = (x1/65535) * 180
+#     servo.move(x)
     
-    if (exercises_done == 2):
+    if (program_complete):
         selection = menu(main_menu)
         if (selection != -1):
             program = menu(main_menu_list[selection])
             if (program != -1):
-                exercises_done = 0
-    if (program != -1 and selection != -1 and exercise_complete):
+                program_complete = False
+            else:
+                exercise_complete = False
+        else:
+            break
+            
+    if (exercise_complete):
+        if (exercises_done < exercise_goal):
+            player.play('/sd/good_work.wav')
+            timer = 5
+            while (timer > 0):
+                time.sleep(1)
+                timer -= 1
+                minutes = timer // 60
+                seconds = timer - minutes * 60
+                segment_display.numbers(minutes, seconds)
+            player.play('/sd/break_over.wav')
+        else:
+            exercises_done = 0
         exercise_name = menu(main_menu_lists[selection][program])
         if (exercise_name != -1):
             image = '/sd/' + str(main_menu_lists[selection][program][exercise_name + 1]) + '.raw'
-            timer = exercise(image, 60)
+            timer = exercise(image, 20)
+            exercise_complete = False
         else:
-            exercises_done -= 1
-        exercise_complete = False
-            
+            exercises_done = exercise_goal
+            program_complete = True
+    
     minutes = timer // 60
     seconds = timer - minutes * 60
     segment_display.numbers(minutes, seconds)
     if timer > 0:
-        timer -= 1
+        tenths += 1
+        if (tenths == 10):    
+            timer -= 1
+            tenths = 0
     else:
         ring_light.fill(red)
         ring_light.show()
         if (exercises_done < exercise_goal):
             exercises_done += 1
+        if (program_complete == False and exercises_done == exercise_goal):
+            player.play('/sd/program_complete.wav')
+            program_complete = True
         exercise_complete = True
+        
+    if (timer == 14 and tenths == 0):
+        player.play('/sd/15_left.wav')
             
-    time.sleep(1)
+    time.sleep(0.1)
 
 print('Program Finished')
