@@ -324,7 +324,7 @@ class Display(object):
         line = color.to_bytes(2, 'big') * w
         self.block(x, y, x + w - 1, y, line)
 
-    def draw_image(self, path, x=0, y=0, w=320, h=240):
+    def draw_image(self, path, x=0, y=0, w=240, h=320):
         """Draw image from flash.
 
         Args:
