@@ -144,7 +144,7 @@ def exercise(image, timer):
 
 main_menu = ['Exit', 'Calisthenics']
 c_menu = ['Exit', 'Chest/Triceps']
-c_c_t_menu = ['Exit', 'Pushups', 'Dips']
+c_c_t_menu = ['Exit', 'Pushups','Dips', 'Knee Pushups', 'Bench Dips', 'Decline Pushups', 'Weighted Dips']
 
 c_menu_list = [c_c_t_menu]
 
