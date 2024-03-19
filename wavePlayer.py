@@ -181,6 +181,8 @@ class wavePlayer:
         self.dma1.abort()
 
     def play(self,filename):
+        print('Currently Playing:', filename)
+        
         # open Audio file and get information
 
         f = wave.open(filename,'rb')
