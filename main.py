@@ -6,8 +6,10 @@ from hcsr04 import HCSR04
 from xglcd_font import XglcdFont
 from wavePlayer import wavePlayer
 from servo import Servo
-from component_classes import Components
 import time, os, sdcard, tm1637
+
+from component_classes import Components
+import states
 
 print('Initializing Components')
 
