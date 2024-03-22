@@ -7,6 +7,7 @@ from xglcd_font import XglcdFont
 from wavePlayer import wavePlayer
 from servo import Servo
 from component_classes import Components
+from exercise import Exercise
 import time, os, sdcard, tm1637
 
 print('Initializing Components')
@@ -79,8 +80,6 @@ variability = 0.1 # By being more selective about what we conside a spike, we ca
 servo = components.servo()
 button = components.button(is_PULL_DOWN=True)
 
-# Initialize Button
-button = Pin(22, Pin.IN, Pin.PULL_DOWN)
 print('Finished Initializing')
 # -------------------------------------------------------
 
@@ -94,62 +93,52 @@ def reversed_string(text):
 def draw_text2(x, y, text):
     lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
 
-def menu(options1):
-    options = [i for i in options1]
-    cur_option = -2
-    displayed_options = 8
-    for i in range(displayed_options):
-        options.append('')
-    num_options = len(options) - displayed_options
+def menu(input_options):
+    options = [i for i in input_options]
+    cur_option = -1
+    options.insert(0, 'Exit')
+    num_options = len(options)
     
     print(options)
     
     while True:
         time.sleep(0.1)
-        option = round(potentiometer.read_u16() / pot_max * (num_options - 1)) - 1
+        option = round(potentiometer.read_u16() / pot_max * (num_options - 1))
         
-        # print(adc.read_u16())
+        # print(potentiometer.read_u16())
         if option != cur_option:
             lcd_display.clear()
             lcd_display.fill_hrect(0, 0, 240, 320, color565(255,255,255))
-            for i in range(displayed_options):
-                draw_text2(5, 5 + (i * 30),  f' {options[option + i + 1]}')
+            for i in range(num_options - option):
+                try:
+                    draw_text2(5, 5 + (i * 30),  f' {options[option + i].name}')
+                except:
+                    draw_text2(5, 5 + (i * 30),  f' {options[option + i]}')
             draw_text2(5, 5, '>')
             
         if button.value():
-            return option
+            print(option)
+            return options[option]
         
         cur_option = option
-        
-def exercise(image, timer):
-    lcd_display.draw_image(image, 0, 0, 240, 320)
-    
-    player.play('/sd/get_ready.wav')
-    time.sleep(2)
-    ring_light.fill(red)
-    ring_light.show()
-    player.play('/sd/three.wav')
-    time.sleep(1)
-    player.play('/sd/two.wav')
-    time.sleep(1)
-    ring_light.fill(yellow)
-    ring_light.show()
-    player.play('/sd/one.wav')
-    time.sleep(1)
-    ring_light.fill(green)
-    ring_light.show()
-    player.play('/sd/go.wav')
-        
-    return timer
 
-main_menu = ['Exit', 'Calisthenics']
-c_menu = ['Exit', 'Chest/Triceps']
-c_c_t_menu = ['Exit', 'Pushups','Dips', 'Knee Pushups', 'Bench Dips', 'Decline Pushups', 'Weighted Dips']
 
-c_menu_list = [c_c_t_menu]
+# -------------------------------------------------
 
-main_menu_list = [c_menu]
-main_menu_lists = [c_menu_list]
+pushups = Exercise('Pushups')
+dips = Exercise('Dips')
+knee_pushups = Exercise('Knee Pushups')
+bench_dips = Exercise('Bench Dips')
+decline_pushups = Exercise('Decline Pushups')
+weighted_dips = Exercise('Weighted Dips')
+
+# -------------------------------------------------
+
+menu_options = {
+    "Calisthenics": {
+        "Chest/Triceps": [pushups, dips, knee_pushups, bench_dips, decline_pushups, weighted_dips]
+    }
+}
 
 timer = 0
 tenths = 0
@@ -164,7 +153,7 @@ exercise_complete = True
 ring_light.fill(red)
 ring_light.show()
 
-while (selection != -1):
+while (selection != 'Exit'):
 #     ring_light.rotate_right(1)
 #     ring_light.show()
 #     
@@ -173,7 +162,7 @@ while (selection != -1):
 #         print('Distance:', distance, 'cm')
 #     except OSError as ex:
 #         print('ERROR getting distance:', ex)
-        
+    
     # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
     if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
         led.on() # Turn the light on if we're detecting a spike
@@ -184,60 +173,12 @@ while (selection != -1):
 #     x = (x1/65535) * 180
 #     servo.move(x)
     
-    if (program_complete):
-        selection = menu(main_menu)
-        if (selection != -1):
-            program = menu(main_menu_list[selection])
-            if (program != -1):
-                program_complete = False
-            else:
-                exercise_complete = False
-        else:
-            break
-            
-    if (exercise_complete):
-        if (exercises_done < exercise_goal):
-            player.play('/sd/good_work.wav')
-            timer = 5
-            while (timer > 0):
-                time.sleep(1)
-                timer -= 1
-                minutes = timer // 60
-                seconds = timer - minutes * 60
-                segment_display.numbers(minutes, seconds)
-            player.play('/sd/break_over.wav')
-        else:
-            exercises_done = 0
-        exercise_name = menu(main_menu_lists[selection][program])
-        if (exercise_name != -1):
-            image = '/sd/' + str(main_menu_lists[selection][program][exercise_name + 1]) + '.raw'
-            timer = exercise(image, 20)
-            exercise_complete = False
-        else:
-            exercises_done = exercise_goal
-            program_complete = True
-    
-    minutes = timer // 60
-    seconds = timer - minutes * 60
-    segment_display.numbers(minutes, seconds)
-    if timer > 0:
-        tenths += 1
-        if (tenths == 10):    
-            timer -= 1
-            tenths = 0
+    selection = menu(menu_options)
+    program = menu(menu_options[selection])
+    exercise_name = menu(menu_options[selection][program])
+    exercise_type = menu(['Timed', 'Reps'])
+    if (exercise_type == 'Timed'):
+        exercise_time = menu([30, 60, 90, 120])
+        exercise_name.timed_exercise(exercise_time)
     else:
-        ring_light.fill(red)
-        ring_light.show()
-        if (exercises_done < exercise_goal):
-            exercises_done += 1
-        if (program_complete == False and exercises_done == exercise_goal):
-            player.play('/sd/program_complete.wav')
-            program_complete = True
-        exercise_complete = True
-        
-    if (timer == 14 and tenths == 0):
-        player.play('/sd/15_left.wav')
-            
-    time.sleep(0.1)
-
-print('Program Finished')
+        exercise_name.rep_exercise()
