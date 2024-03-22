@@ -2,13 +2,13 @@ from ili9341 import Display, color565
 from hcsr04 import HCSR04
 
 class Base_State:
-    def __init__(self, lcd_display: Display, ultrasonic_sensor: HCSR04) -> None:
+    def __init__(self, lcd_display: Display):
         self.lcd_display = lcd_display
-        self.ultrasonic_sensor = ultrasonic_sensor
         self.movement_speed_factor = 1
 
-    def idle(self, face_image_path: str):
-        self.lcd_display.draw_image(face_image_path)
+    def idle(self, face_ascii: str):
+        self.lcd_display.draw_image(face_ascii)
+        print(face_ascii)
         # move calmly
 
     def greeting(self, face_image_path: str):
@@ -21,8 +21,8 @@ class Base_State:
         self.lcd_display.draw_image(face_image_path)
 
 class Warm_Up(Base_State):
-    def __init__(self, lcd_display: Display, ultrasonic_sensor: HCSR04) -> None:
-        super().__init__(lcd_display, ultrasonic_sensor)
+    def __init__(self, lcd_display: Display):
+        super().__init__(lcd_display)
         self.movement_speed_factor = 1.2
 
     def idle(self, face_image_path:str):
@@ -36,5 +36,5 @@ class Warm_Up(Base_State):
         # exercise_type.execute()
 
 class Workout(Warm_Up):
-    def __init__(self, lcd_display: Display, ultrasonic_sensor: HCSR04) -> None:
-        super().__init__(lcd_display, ultrasonic_sensor)
+    def __init__(self, lcd_display: Display):
+        super().__init__(lcd_display)

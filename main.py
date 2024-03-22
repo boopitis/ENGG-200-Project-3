@@ -6,10 +6,8 @@ from hcsr04 import HCSR04
 from xglcd_font import XglcdFont
 from wavePlayer import wavePlayer
 from servo import Servo
-import time, os, sdcard, tm1637
-
 from component_classes import Components
-import states
+import time, os, sdcard, tm1637
 
 print('Initializing Components')
 
@@ -145,13 +143,13 @@ def exercise(image, timer):
     return timer
 
 main_menu = ['Exit', 'Calisthenics']
-c_menu = ['Exit', 'Chest/Triceps']
-c_c_t_menu = ['Exit', 'Pushups','Dips', 'Knee Pushups', 'Bench Dips', 'Decline Pushups', 'Weighted Dips']
+calisthenics_menu = ['Exit', 'Chest/Triceps']
+calisthenics_chest_triceps_menu = ['Exit', 'Pushups','Dips', 'Knee Pushups', 'Bench Dips', 'Decline Pushups', 'Weighted Dips']
 
-c_menu_list = [c_c_t_menu]
+calisthenics_menu_list = [calisthenics_chest_triceps_menu]
 
-main_menu_list = [c_menu]
-main_menu_lists = [c_menu_list]
+main_menu_list = [calisthenics_menu]
+main_menu_lists = [calisthenics_menu_list]
 
 timer = 0
 tenths = 0
