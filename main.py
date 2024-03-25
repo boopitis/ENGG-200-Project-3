@@ -6,9 +6,11 @@ from hcsr04 import HCSR04
 from xglcd_font import XglcdFont
 from wavePlayer import wavePlayer
 from servo import Servo
+import time, os, sdcard, tm1637
+
+from states import Base_State, Warm_Up, Workout
 from component_classes import Components
 from exercise import Exercise
-import time, os, sdcard, tm1637
 
 print('Initializing Components')
 
@@ -63,7 +65,7 @@ sd = components.sd_card()
 lcd_display = components.lcd_display()
 font = XglcdFont('TimesNR28x25.h', 28, 25)
 
-# ultrasonic_sensor = components.ultrasonic_sensor()
+ultrasonic_sensor = components.ultrasonic_sensor()
 # distance = ultrasonic_sensor.distance_cm()
 
 potentiometer = components.potentiometer()
@@ -122,16 +124,6 @@ def menu(input_options):
         
         cur_option = option
 
-<<<<<<< HEAD
-main_menu = ['Exit', 'Calisthenics']
-calisthenics_menu = ['Exit', 'Chest/Triceps']
-calisthenics_chest_triceps_menu = ['Exit', 'Pushups','Dips', 'Knee Pushups', 'Bench Dips', 'Decline Pushups', 'Weighted Dips']
-
-calisthenics_menu_list = [calisthenics_chest_triceps_menu]
-
-main_menu_list = [calisthenics_menu]
-main_menu_lists = [calisthenics_menu_list]
-=======
 
 # -------------------------------------------------
 
@@ -149,7 +141,6 @@ menu_options = {
         "Chest/Triceps": [pushups, dips, knee_pushups, bench_dips, decline_pushups, weighted_dips]
     }
 }
->>>>>>> origin/main
 
 timer = 0
 tenths = 0
@@ -164,6 +155,14 @@ exercise_complete = True
 ring_light.fill(red)
 ring_light.show()
 
+base_state = Base_State(lcd_display=lcd_display)
+warm_up_state = Warm_Up(lcd_display=lcd_display)
+workout_state = Workout(lcd_display=lcd_display)
+# -------------------------------------------------------------------------
+idle = True
+warm_up = False
+workout = False
+
 while (selection != 'Exit'):
 #     ring_light.rotate_right(1)
 #     ring_light.show()
@@ -173,7 +172,19 @@ while (selection != 'Exit'):
 #         print('Distance:', distance, 'cm')
 #     except OSError as ex:
 #         print('ERROR getting distance:', ex)
+    distance = ultrasonic_sensor.distance_cm()
+
+    if idle == True and warm_up_state == False and workout_state == False:
+        state = base_state
+    elif idle == False and warm_up_state == True and workout_state == False:
+        state = warm_up_state
+    elif idle == False and warm_up_state == False and workout_state == True:
+        state = workout_state
+
+    if distance > 100:
+        state.idle('^_^')
     
+
     # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
     if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
         led.on() # Turn the light on if we're detecting a spike
@@ -192,22 +203,4 @@ while (selection != 'Exit'):
         exercise_time = menu([30, 60, 90, 120])
         exercise_name.timed_exercise(exercise_time)
     else:
-<<<<<<< HEAD
-        ring_light.fill(red)
-        ring_light.show()
-        if (exercises_done < exercise_goal):
-            exercises_done += 1
-        if (program_complete == False and exercises_done == exercise_goal):
-            player.play('/sd/program_complete.wav')
-            program_complete = True
-        exercise_complete = True
-        
-    if (timer == 14 and tenths == 0):
-        player.play('/sd/15_left.wav')
-            
-    time.sleep(0.1)
-
-print('Program Finished')
-=======
         exercise_name.rep_exercise()
->>>>>>> origin/main
