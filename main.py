@@ -1,14 +1,10 @@
-from machine import I2C, Pin, SPI, ADC, PWM
-from imu import MPU6050
-from neopixel import Neopixel
-from ili9341 import Display, color565
-from hcsr04 import HCSR04
+from machine import Pin
+from ili9341 import color565
 from xglcd_font import XglcdFont
-from wavePlayer import wavePlayer
-from servo import Servo
-import time, os, sdcard, tm1637
+import time
+import asyncio
 
-from states import Base_State, Warm_Up, Workout
+from states import Base_State, Workout
 from component_classes import Components
 from exercise import Exercise
 
@@ -61,7 +57,7 @@ colors_rgbw.append((0, 0, 0, 255))
 colors = colors_rgb
 # colors = colors_rgbw
 
-sd = components.sd_card()
+#sd = components.sd_card()
 lcd_display = components.lcd_display()
 font = XglcdFont('TimesNR28x25.h', 28, 25)
 
@@ -95,7 +91,7 @@ def reversed_string(text):
 def draw_text2(x, y, text):
     lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
 
-def menu(input_options):
+async def menu(input_options):
     options = [i for i in input_options]
     cur_option = -1
     options.insert(0, 'Exit')
@@ -109,6 +105,7 @@ def menu(input_options):
         
         # print(potentiometer.read_u16())
         if option != cur_option:
+            print(option)
             lcd_display.clear()
             lcd_display.fill_hrect(0, 0, 240, 320, color565(255,255,255))
             for i in range(num_options - option):
@@ -117,12 +114,14 @@ def menu(input_options):
                 except:
                     draw_text2(5, 5 + (i * 30),  f' {options[option + i]}')
             draw_text2(5, 5, '>')
-            
+
+
         if button.value():
-            print(option)
+            print('comfirmed')
             return options[option]
         
         cur_option = option
+        await state_actions()
 
 
 # -------------------------------------------------
@@ -156,51 +155,61 @@ ring_light.fill(red)
 ring_light.show()
 
 base_state = Base_State(lcd_display=lcd_display)
-warm_up_state = Warm_Up(lcd_display=lcd_display)
 workout_state = Workout(lcd_display=lcd_display)
 # -------------------------------------------------------------------------
-idle = True
-warm_up = False
-workout = False
+working_out = False
 
-while (selection != 'Exit'):
-#     ring_light.rotate_right(1)
-#     ring_light.show()
-#     
-#     try:
-#         distance = ultrasonic_sensor.distance_cm()
-#         print('Distance:', distance, 'cm')
-#     except OSError as ex:
-#         print('ERROR getting distance:', ex)
+async def state_actions():
     distance = ultrasonic_sensor.distance_cm()
 
-    if idle == True and warm_up_state == False and workout_state == False:
-        state = base_state
-    elif idle == False and warm_up_state == True and workout_state == False:
-        state = warm_up_state
-    elif idle == False and warm_up_state == False and workout_state == True:
+    if working_out:
         state = workout_state
+    else:
+        state = base_state
+
+    print(distance)
 
     if distance > 100:
-        state.idle('^_^')
-    
+        state.idle()
+    else:
+        state.greeting()
 
-    # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
-    if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
-        led.on() # Turn the light on if we're detecting a spike
-    else:
-        led.off() # Otherwise, keep the light off
-    
-#     x1 = potentiometer.read_u16()
-#     x = (x1/65535) * 180
-#     servo.move(x)
-    
-    selection = menu(menu_options)
-    program = menu(menu_options[selection])
-    exercise_name = menu(menu_options[selection][program])
-    exercise_type = menu(['Timed', 'Reps'])
-    if (exercise_type == 'Timed'):
-        exercise_time = menu([30, 60, 90, 120])
-        exercise_name.timed_exercise(exercise_time)
-    else:
-        exercise_name.rep_exercise()
+    #await asyncio.sleep(0.5)
+
+async def main():
+    global selection, working_out
+
+    while (selection != 'Exit'):
+    #     ring_light.rotate_right(1)
+    #     ring_light.show()
+    #     
+    #     try:
+    #         distance = ultrasonic_sensor.distance_cm()
+    #         print('Distance:', distance, 'cm')
+    #     except OSError as ex:
+    #         print('ERROR getting distance:', ex)
+        asyncio.create_task(state_actions())
+
+        # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
+        if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
+            led.on() # Turn the light on if we're detecting a spike
+        else:
+            led.off() # Otherwise, keep the light off
+        
+    #     x1 = potentiometer.read_u16()
+    #     x = (x1/65535) * 180
+    #     servo.move(x)
+        
+        selection = await menu(menu_options)
+        program = await menu(menu_options[selection])
+        exercise_name = await menu(menu_options[selection][program])
+        exercise_type = menu(['Timed', 'Reps'])
+        if (exercise_type == 'Timed'):
+            exercise_time = menu([30, 60, 90, 120])
+            working_out = True
+            await exercise_name.timed_exercise(exercise_time)
+        else:
+            working_out = True
+            await exercise_name.rep_exercise()
+
+asyncio.run(main())

@@ -1,13 +1,8 @@
-from machine import I2C, Pin, SPI, ADC, PWM
-from imu import MPU6050
-from neopixel import Neopixel
-from ili9341 import Display, color565
-from hcsr04 import HCSR04
 from xglcd_font import XglcdFont
-from wavePlayer import wavePlayer
-from servo import Servo
+import time
+import asyncio
+
 from component_classes import Components
-import time, os, sdcard, tm1637
 
 components = Components(
     speaker_left_pin = 10,
@@ -43,6 +38,22 @@ font = XglcdFont('TimesNR28x25.h', 28, 25)
 
 number_of_leds = 8
 ring_light = components.ring_light(default_brightness=10, number_of_leds=number_of_leds)
+red = (255, 0, 0)
+orange = (255, 50, 0)
+yellow = (255, 100, 0)
+green = (0, 255, 0)
+blue = (0, 0, 255)
+indigo = (100, 0, 90)
+violet = (200, 0, 100)
+colors_rgb = [red, orange, yellow, green, blue, indigo, violet]
+
+# same colors as normaln rgb, just 0 added at the end
+colors_rgbw = [color+tuple([0]) for color in colors_rgb]
+colors_rgbw.append((0, 0, 0, 255))
+
+# uncomment colors_rgbw if you have RGBW strip
+colors = colors_rgb
+# colors = colors_rgbw
 
 button = components.button(is_PULL_DOWN=True)
 
@@ -50,7 +61,7 @@ class Exercise:
     def __init__(self, name):
         self.name = name
         
-    def timed_exercise(self, duration=60):
+    async def timed_exercise(self, duration=60):
         image = '/sd/' + self.name + '.raw'
         
         lcd_display.draw_image(image, 0, 0, 240, 320)
@@ -88,12 +99,14 @@ class Exercise:
                     tenths = 0
             if (timer == 14 and tenths == 0):
                 player.play('/sd/15_left.wav')
+
+            await asyncio.sleep(0.1)
                 
         ring_light.fill(red)
         ring_light.show()
         player.play('/sd/good_work.wav')
         
-    def rep_exercise(self):
+    async def rep_exercise(self):
         image = '/sd/' + self.name + '.raw'
         
         lcd_display.draw_image(image, 0, 0, 240, 320)
@@ -117,6 +130,8 @@ class Exercise:
         while True:
             if button.value():
                 break
+
+            await asyncio.sleep(0.1)
                 
         ring_light.fill(red)
         ring_light.show()
