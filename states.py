@@ -8,12 +8,12 @@ class Base_State:
 
     def idle(self):
         #TODO: put this back self.lcd_display.draw_image(face_ascii)
-        print('^_^')
+        print('Idle action activated')
         # move calmly
 
     def greeting(self):
         #self.lcd_display.draw_image("ヾ(≧▽≦*)o")
-        print("ヾ(≧▽≦*)o")
+        print("Greeting action activated")
 
     def response(self, face_ascii: str):
         self.lcd_display.draw_image(face_ascii)
