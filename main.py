@@ -91,6 +91,7 @@ def reversed_string(text):
 def draw_text2(x, y, text):
     lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
 
+
 async def menu(input_options):
     options = [i for i in input_options]
     cur_option = -1
@@ -158,8 +159,23 @@ base_state = Base_State(lcd_display=lcd_display)
 workout_state = Workout(lcd_display=lcd_display)
 # -------------------------------------------------------------------------
 working_out = False
+greeted = False
+alone_time = 0
+
+async def alone_time_increase():
+    last_inc = time.time()
+    while True:
+        if time.time() >= last_inc + 1:
+            alone_time += 1
+            print(alone_time)
+            last_inc = time.time()
+        
+        await asyncio.sleep(0.1)
+ #       <other code to loop through>
 
 async def state_actions():
+    global greeted
+
     distance = ultrasonic_sensor.distance_cm()
 
     if working_out:
@@ -171,8 +187,14 @@ async def state_actions():
 
     if distance > 100:
         state.idle()
-    else:
+
+        if greeted and alone_time < 60:
+            await alone_time_increase()
+    elif distance < 100 and greeted == False:
         state.greeting()
+        greeted = True
+
+    
 
     #await asyncio.sleep(0.5)
 
