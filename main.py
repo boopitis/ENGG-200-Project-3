@@ -1,14 +1,12 @@
-from machine import I2C, Pin, SPI, ADC, PWM
-from imu import MPU6050
-from neopixel import Neopixel
-from ili9341 import Display, color565
-from hcsr04 import HCSR04
+from machine import Pin
+from ili9341 import color565
 from xglcd_font import XglcdFont
-from wavePlayer import wavePlayer
-from servo import Servo
+import time
+import asyncio
+
+from states import Base_State, Workout
 from component_classes import Components
 from exercise import Exercise
-import time, os, sdcard, tm1637
 
 print('Initializing Components')
 
@@ -59,11 +57,11 @@ colors_rgbw.append((0, 0, 0, 255))
 colors = colors_rgb
 # colors = colors_rgbw
 
-sd = components.sd_card()
+#sd = components.sd_card()
 lcd_display = components.lcd_display()
-font = XglcdFont('TimesNR28x25.h', 28, 25)
+# TODO: Had to disable for now # font = XglcdFont('TimesNR28x25.h', 28, 25)
 
-# ultrasonic_sensor = components.ultrasonic_sensor()
+ultrasonic_sensor = components.ultrasonic_sensor()
 # distance = ultrasonic_sensor.distance_cm()
 
 potentiometer = components.potentiometer()
@@ -90,10 +88,12 @@ def reversed_string(text):
         
     return result
 
-def draw_text2(x, y, text):
-    lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
+# TODO: Had to disable for now #
+# def draw_text2(x, y, text):
+#     lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
 
-def menu(input_options):
+
+async def menu(input_options):
     options = [i for i in input_options]
     cur_option = -1
     options.insert(0, 'Exit')
@@ -107,20 +107,25 @@ def menu(input_options):
         
         # print(potentiometer.read_u16())
         if option != cur_option:
+            print(f'Selection: {input_options[option]} | confirm?')
             lcd_display.clear()
             lcd_display.fill_hrect(0, 0, 240, 320, color565(255,255,255))
-            for i in range(num_options - option):
-                try:
-                    draw_text2(5, 5 + (i * 30),  f' {options[option + i].name}')
-                except:
-                    draw_text2(5, 5 + (i * 30),  f' {options[option + i]}')
-            draw_text2(5, 5, '>')
-            
+            # for i in range(num_options - option):
+            #     try:
+            #         draw_text2(5, 5 + (i * 30),  f' {options[option + i].name}')
+            #     except:
+            #         draw_text2(5, 5 + (i * 30),  f' {options[option + i]}')
+            # draw_text2(5, 5, '>')
+
+
         if button.value():
-            print(option)
+            print('comfirmed')
             return options[option]
         
         cur_option = option
+
+        # Allows time for state_actions() to run
+        await state_actions()
 
 
 # -------------------------------------------------
@@ -153,32 +158,87 @@ exercise_complete = True
 ring_light.fill(red)
 ring_light.show()
 
-while (selection != 'Exit'):
-#     ring_light.rotate_right(1)
-#     ring_light.show()
-#     
-#     try:
-#         distance = ultrasonic_sensor.distance_cm()
-#         print('Distance:', distance, 'cm')
-#     except OSError as ex:
-#         print('ERROR getting distance:', ex)
-    
-    # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
-    if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
-        led.on() # Turn the light on if we're detecting a spike
+base_state = Base_State(lcd_display=lcd_display)
+workout_state = Workout(lcd_display=lcd_display)
+# -------------------------------------------------------------------------
+working_out = False                                     # Changes state to working out. Set outside of state_actions()
+greeted = False                                         # Action related boolean used in state_actions()
+alone_time = 0                                          # How long buddy has been alone for (Seconds)
+time_to_feel_alone = 60                                 # (Seconds)
+notice_distance = 100                                   # (Meters)
+
+# TODO: Make sure workout state works while exercise is being executed (buddy can move around and interact while exercise is active)
+# TODO: Incorporate LCD and movement functionality into states.py
+# TODO: Edit exercise class so that it doesn't need to re-instanstiate components.
+
+async def state_actions():
+    global greeted, alone_time
+
+    distance = ultrasonic_sensor.distance_cm()
+    print(distance)
+
+    # Determined in main function.
+    if working_out:
+        state = workout_state
     else:
-        led.off() # Otherwise, keep the light off
-    
-#     x1 = potentiometer.read_u16()
-#     x = (x1/65535) * 180
-#     servo.move(x)
-    
-    selection = menu(menu_options)
-    program = menu(menu_options[selection])
-    exercise_name = menu(menu_options[selection][program])
-    exercise_type = menu(['Timed', 'Reps'])
-    if (exercise_type == 'Timed'):
-        exercise_time = menu([30, 60, 90, 120])
-        exercise_name.timed_exercise(exercise_time)
-    else:
-        exercise_name.rep_exercise()
+        state = base_state
+
+    # If buddy has been alone for too long, will be able to greet again.
+    if alone_time >= time_to_feel_alone:
+        greeted = False
+
+    # If someone is not nearby, buddy will switch to an idle action after a set amount of time (time_to_feel_alone)
+    # NOTE: The distance < 0 accounts for any weird negative values that pop up in the readings.
+    if distance > notice_distance or distance < 0:
+        if alone_time > time_to_feel_alone:
+            state.idle()
+
+        # Keeps track of how long buddy has been alone for.
+        if greeted and alone_time < time_to_feel_alone:
+            alone_time += 1
+            print(alone_time)
+            
+            # Pauses timer for 1 second and allows for other tasks to run in the meantime.
+            await asyncio.sleep(1)
+
+    # When buddy detects someone and they haven't greeted anyone yet (or for a while), buddy switches to a greeting action.
+    # If they have greeted someone, set so that they won't be feel alone.
+    if (distance < notice_distance and distance > 0) and greeted == False:
+        if greeted:
+            alone_time = 0
+        else:
+            state.greeting()
+            greeted = True
+
+async def main():
+    global selection, working_out
+
+    while (selection != 'Exit'):
+        # Set state_actions() to run in the background.
+        asyncio.create_task(state_actions())
+
+        # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
+        if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
+            led.on() # Turn the light on if we're detecting a spike
+        else:
+            led.off() # Otherwise, keep the light off
+        
+        # Menus for selecting:
+        # 1. Category of exercise (Calisthenics)
+        # 2. Target muscle group (Chest/Triceps)
+        # 3. Exercise (Pushups/Dips/Decline_Pushups/etc)
+        # 4. Whether exercise should be timed or counted by reps.
+        selection = await menu(menu_options)
+        program = await menu(menu_options[selection])
+        exercise_name = await menu(menu_options[selection][program])
+        exercise_type = menu(['Timed', 'Reps'])
+
+        if (exercise_type == 'Timed'):
+            exercise_time = menu([30, 60, 90, 120])
+            working_out = True
+            await exercise_name.timed_exercise(exercise_time)
+        else:
+            working_out = True
+            await exercise_name.rep_exercise()
+
+asyncio.run(main())
