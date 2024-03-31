@@ -107,7 +107,7 @@ async def menu(input_options):
         
         # print(potentiometer.read_u16())
         if option != cur_option:
-            print(f'Selection: {input_options[option]} | confirm?')
+            print(f'Selection: {options[option]} | confirm?')
             lcd_display.clear()
             lcd_display.fill_hrect(0, 0, 240, 320, color565(255,255,255))
             # for i in range(num_options - option):
@@ -203,7 +203,7 @@ async def state_actions():
 
     # When buddy detects someone and they haven't greeted anyone yet (or for a while), buddy switches to a greeting action.
     # If they have greeted someone, set so that they won't be feel alone.
-    if (distance < notice_distance and distance > 0) and greeted == False:
+    if (distance < notice_distance and distance > 0):
         if greeted:
             alone_time = 0
         else:
@@ -231,10 +231,10 @@ async def main():
         selection = await menu(menu_options)
         program = await menu(menu_options[selection])
         exercise_name = await menu(menu_options[selection][program])
-        exercise_type = menu(['Timed', 'Reps'])
+        exercise_type = await menu(['Timed', 'Reps'])
 
         if (exercise_type == 'Timed'):
-            exercise_time = menu([30, 60, 90, 120])
+            exercise_time = await menu([30, 60, 90, 120])
             working_out = True
             await exercise_name.timed_exercise(exercise_time)
         else:
