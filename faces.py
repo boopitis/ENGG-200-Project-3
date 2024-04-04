@@ -27,6 +27,16 @@ class Faces():
         lcd_display.fill_vrect(80 ,180 ,30, 100, self.color)
         lcd_display.fill_vrect(85, 185, 20, 90, color565(255,255,255))
 
+        # Pupils
+        lcd_display.fill_vrect(85,85,20,20,color565(0,0,255))
+        lcd_display.fill_vrect(85,215,20,20,color565(0,0,255))
+
+        # Eyebrows
+        lcd_display.fill_vrect(60, 40, 10, 100, self.color)
+        lcd_display.fill_vrect(60, 180, 10, 100, self.color)
+
+        lcd_display.fill_vrect(180, 90, 10, 100, self.color)
+
 if __name__ == "__main__":
     f = Faces(color565(0,0,0))
     f.happy()
