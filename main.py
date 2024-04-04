@@ -57,9 +57,10 @@ colors_rgbw.append((0, 0, 0, 255))
 colors = colors_rgb
 # colors = colors_rgbw
 
-#sd = components.sd_card()
+sd = components.sd_card()
 lcd_display = components.lcd_display()
-# TODO: Had to disable for now # font = XglcdFont('TimesNR28x25.h', 28, 25)
+# TODO: Had to disable for now 
+font = XglcdFont('TimesNR28x25.h', 28, 25)
 
 ultrasonic_sensor = components.ultrasonic_sensor()
 # distance = ultrasonic_sensor.distance_cm()
@@ -89,8 +90,8 @@ def reversed_string(text):
     return result
 
 # TODO: Had to disable for now #
-# def draw_text2(x, y, text):
-#     lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
+def draw_text2(x, y, text):
+    lcd_display.draw_text(0 + y, 320 - x, reversed_string(text), font, color565(0,0,0), color565(255,255,255), True, True, 1)
 
 
 async def menu(input_options):
@@ -107,15 +108,15 @@ async def menu(input_options):
         
         # print(potentiometer.read_u16())
         if option != cur_option:
-            print(f'Selection: {options[option]} | confirm?')
+            # print(f'Selection: {input_options[option]} | confirm?')
             lcd_display.clear()
             lcd_display.fill_hrect(0, 0, 240, 320, color565(255,255,255))
-            # for i in range(num_options - option):
-            #     try:
-            #         draw_text2(5, 5 + (i * 30),  f' {options[option + i].name}')
-            #     except:
-            #         draw_text2(5, 5 + (i * 30),  f' {options[option + i]}')
-            # draw_text2(5, 5, '>')
+            for i in range(num_options - option):
+                try:
+                    draw_text2(5, 5 + (i * 30),  f' {options[option + i].name}')
+                except:
+                    draw_text2(5, 5 + (i * 30),  f' {options[option + i]}')
+            draw_text2(5, 5, '>')
 
 
         if button.value():

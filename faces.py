@@ -15,8 +15,18 @@ lcd_display = components.lcd_display()
 # -------------------------------------------------------
 
 class Faces():
-    def __init__(self, colour=(0,0,0)):
-        self.colour = colour
+    
+    def __init__(self, color=color565(0,0,0)):
+        self.color = color
 
     def happy(self):
-        
+        lcd_display.fill_hrect(0, 0, 240, 320, color565(255,255,255))
+        lcd_display.fill_vrect(80, 40, 30, 100, self.color)
+        lcd_display.fill_vrect(85, 70, 20, 40, self.color)
+        lcd_display.fill_vrect(85, 45, 20, 90, color565(255,255,255))
+        lcd_display.fill_vrect(80 ,180 ,30, 100, self.color)
+        lcd_display.fill_vrect(85, 185, 20, 90, color565(255,255,255))
+
+if __name__ == "__main__":
+    f = Faces(color565(0,0,0))
+    f.happy()
