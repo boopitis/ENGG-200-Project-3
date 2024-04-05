@@ -164,18 +164,16 @@ workout_state = Workout(lcd_display=lcd_display)
 working_out = False                                     # Changes state to working out. Set outside of state_actions()
 greeted = False                                         # Action related boolean used in state_actions()
 alone_time = 0                                          # How long buddy has been alone for (Seconds)
-time_to_feel_alone = 60                                 # (Seconds)
+time_to_feel_alone = 150                                # (Tenth-Seconds) (more accurately 0.13 seconds)
 notice_distance = 100                                   # (Meters)
 
-# TODO: Make sure workout state works while exercise is being executed (buddy can move around and interact while exercise is active)
 # TODO: Incorporate LCD and movement functionality into states.py
-# TODO: Edit exercise class so that it doesn't need to re-instanstiate components.
 
 async def state_actions():
     global greeted, alone_time
 
     distance = ultrasonic_sensor.distance_cm()
-    print(distance)
+    print(f'Distance is: {distance} cm')
 
     # Determined in main function.
     if working_out:
@@ -196,10 +194,10 @@ async def state_actions():
         # Keeps track of how long buddy has been alone for.
         if greeted and alone_time < time_to_feel_alone:
             alone_time += 1
-            print(alone_time)
+            print(f'Been alone for: {alone_time} ds')
             
             # Pauses timer for 1 second and allows for other tasks to run in the meantime.
-            await asyncio.sleep(1)
+            #await asyncio.sleep(1)
 
     # When buddy detects someone and they haven't greeted anyone yet (or for a while), buddy switches to a greeting action.
     # If they have greeted someone, set so that they won't be feel alone.
@@ -209,7 +207,9 @@ async def state_actions():
         else:
             state.greeting()
             greeted = True
+            alone_time = 0
 
+            
 async def main():
     global selection, working_out
 
