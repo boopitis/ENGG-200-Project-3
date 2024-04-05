@@ -3,6 +3,7 @@ import time
 import asyncio
 
 from component_classes import Components
+from faces import Faces
 
 components = Components(
     speaker_left_pin = 10,
@@ -56,6 +57,7 @@ colors = colors_rgb
 # colors = colors_rgbw
 
 button = components.button(is_PULL_DOWN=True)
+faces = Faces()
 
 class Exercise:
     def __init__(self, name):
@@ -100,10 +102,16 @@ class Exercise:
             if (timer == 14 and tenths == 0):
                 player.play('/sd/15_left.wav')
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0)
                 
         ring_light.fill(red)
         ring_light.show()
+
+        # Quick face pop in-and-out effect
+        faces.happy()
+        faces.blank()
+        faces.happy()
+
         player.play('/sd/good_work.wav')
         
     async def rep_exercise(self):
@@ -135,4 +143,10 @@ class Exercise:
                 
         ring_light.fill(red)
         ring_light.show()
+
+        # Quick face pop in-and-out effect
+        faces.happy()
+        faces.blank()
+        faces.happy()
+        
         player.play('/sd/good_work.wav')

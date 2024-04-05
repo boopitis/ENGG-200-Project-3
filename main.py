@@ -125,7 +125,7 @@ async def menu(input_options):
         cur_option = option
 
         # Allows time for state_actions() to run
-        await state_actions()
+        await asyncio.sleep(0)
 
 
 # -------------------------------------------------
@@ -164,10 +164,12 @@ workout_state = Workout(lcd_display=lcd_display)
 working_out = False                                     # Changes state to working out. Set outside of state_actions()
 greeted = False                                         # Action related boolean used in state_actions()
 alone_time = 0                                          # How long buddy has been alone for (Seconds)
-time_to_feel_alone = 150                                # (Tenth-Seconds) (more accurately 0.13 seconds)
+time_to_feel_alone = 20                                 # (Seconds)
 notice_distance = 100                                   # (Meters)
 
 # TODO: Incorporate LCD and movement functionality into states.py
+
+
 
 async def state_actions():
     global greeted, alone_time
@@ -189,15 +191,16 @@ async def state_actions():
     # NOTE: The distance < 0 accounts for any weird negative values that pop up in the readings.
     if distance > notice_distance or distance < 0:
         if alone_time > time_to_feel_alone:
-            state.idle()
+            # NOTE: The asyncio.gather and asyncio.sleep(0) allow for menu control when state.idle() is sleeping.
+            await asyncio.gather(state.idle(), asyncio.sleep(0))
 
         # Keeps track of how long buddy has been alone for.
         if greeted and alone_time < time_to_feel_alone:
             alone_time += 1
-            print(f'Been alone for: {alone_time} ds')
+            print(f'Been alone for: {alone_time} s')
             
             # Pauses timer for 1 second and allows for other tasks to run in the meantime.
-            #await asyncio.sleep(1)
+            await asyncio.sleep(1)
 
     # When buddy detects someone and they haven't greeted anyone yet (or for a while), buddy switches to a greeting action.
     # If they have greeted someone, set so that they won't be feel alone.
@@ -205,7 +208,7 @@ async def state_actions():
         if greeted:
             alone_time = 0
         else:
-            state.greeting()
+            await asyncio.gather(state.greeting(), asyncio.sleep(0))
             greeted = True
             alone_time = 0
 
@@ -215,7 +218,7 @@ async def main():
 
     while (selection != 'Exit'):
         # Set state_actions() to run in the background.
-        asyncio.create_task(state_actions())
+        #asyncio.create_task(state_actions())
 
         # # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
         # if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
@@ -228,27 +231,29 @@ async def main():
         # 2. Target muscle group (Chest/Triceps)
         # 3. Exercise (Pushups/Dips/Decline_Pushups/etc)
         # 4. Whether exercise should be timed or counted by reps.
-        selection = await menu(menu_options)
+        # NOTE: selection, program, exercise_name, and exercise_type are indexed because asyncio.gather() returns a tuple object.
+        #       Use [0] to get the desired menu option.
+        selection = await asyncio.gather(menu(menu_options), state_actions())
         if selection == 'Exit':
             continue
-        program = await menu(menu_options[selection])
+        program = await asyncio.gather(menu(menu_options[selection[0]]), state_actions())
         if program == 'Exit':
             continue
-        exercise_name = await menu(menu_options[selection][program])
+        exercise_name = await asyncio.gather(menu(menu_options[selection[0]][program[0]]), state_actions())
         if exercise_name == 'Exit':
             continue
-        exercise_type = await menu(['Timed', 'Reps'])
+        exercise_type = await asyncio.gather(menu(['Timed', 'Reps']), state_actions())
         if exercise_type == 'Exit':
             continue
 
-        if (exercise_type == 'Timed'):
-            exercise_time = await menu([30, 60, 90, 120])
-            if exercise_time == 'Exit':
+        if (exercise_type[0] == 'Timed'):
+            exercise_time = await asyncio.gather(menu([30, 60, 90, 120]), state_actions())
+            if exercise_time[0] == 'Exit':
                 continue
             working_out = True
-            await exercise_name.timed_exercise(exercise_time)
+            await asyncio.gather(exercise_name[0].timed_exercise(exercise_time[0]), state_actions())
         else:
             working_out = True
-            await exercise_name.rep_exercise()
+            await asyncio.gather(exercise_name[0].rep_exercise(), state_actions())
 
 asyncio.run(main())

@@ -48,92 +48,114 @@ class Faces():
 
         lcd_display.fill_ellipse(y, 320 - x, b, a, color)
 
-    def idle(self, thick=False):
+    def idle(self, thick=False, x_offset=0, y_offset=0):
         white = color565(255,255,255)
-        lcd_display.fill_hrect(0, 0, 240, 320, white)
+        lcd_display.fill_hrect(0 + x_offset, 0, 240, 320, white)
 
         # Eyes
-        self.draw_rect(40, 80, 100, 30)
-        self.draw_rect(45, 85, 90, 20, white)
-        self.draw_rect(70, 85, 40, 20)
-        self.draw_rect(180, 80, 100, 30)
-        self.draw_rect(185, 85, 90, 20, white)
-        self.draw_rect(210, 85, 40, 20)
+        self.draw_rect(40 + x_offset, 80 + y_offset, 100, 30)
+        self.draw_rect(45 + x_offset, 85 + y_offset, 90, 20, white)
+        self.draw_rect(70 + x_offset, 85 + y_offset, 40, 20)
+        self.draw_rect(180 + x_offset, 80 + y_offset, 100, 30)
+        self.draw_rect(185 + x_offset, 85 + y_offset, 90, 20, white)
+        self.draw_rect(210 + x_offset, 85 + y_offset, 40, 20)
 
 
         # Eyebrows
         if thick:
-            self.draw_rect(40, 60, 100, 10)
-            self.draw_rect(180, 60, 100, 10)
-            lcd_display.draw_lines([[60, 320 - 30], [50, 320 -  40], [45, 320 - 60]], self.color)
-            lcd_display.draw_lines([[60, 30], [50, 40], [45, 60]], self.color)
+            self.draw_rect(40 + x_offset, 60 + y_offset, 100, 10)
+            self.draw_rect(180 + x_offset, 60 + y_offset, 100, 10)
+            lcd_display.draw_lines([[60 + x_offset, (320 - 30) + y_offset], [50 + x_offset, (320 - 40) + y_offset], [45 + x_offset, (320 - 60) + y_offset]], self.color)
+            lcd_display.draw_lines([[60 + x_offset, 30 + y_offset], [50 + x_offset, 40 + y_offset], [45 + x_offset, 60 + y_offset]], self.color)
         else:
-            self.draw_ellipse(80, 60, 60, 10)
-            self.draw_ellipse(80, 60, 55, 5, white)
-            self.draw_ellipse(240, 60, 60, 10)
-            self.draw_ellipse(240, 60, 55, 5, white)
-            self.draw_rect(20, 60, 280, 15, white)
-            self.draw_rect(55, 50, 210, 5)
-            self.draw_rect(130, 50, 60, 20, white)
+            self.draw_ellipse(80 + x_offset, 60 + y_offset, 60, 10)
+            self.draw_ellipse(80 + x_offset, 60 + y_offset, 55, 5, white)
+            self.draw_ellipse(240 + x_offset, 60 + y_offset, 60, 10)
+            self.draw_ellipse(240 + x_offset, 60 + y_offset, 55, 5, white)
+            self.draw_rect(20 + x_offset, 60 + y_offset, 280, 15, white)
+            self.draw_rect(55 + x_offset, 50 + y_offset, 210, 5)
+            self.draw_rect(130 + x_offset, 50 + y_offset, 60, 20, white)
 
         # Mouth
-        self.draw_ellipse(220, 180, 30, 20)
-        self.draw_ellipse(210, 161, 40, 30, white)
-        self.draw_rect(90, 190, 130, 12)
-        self.draw_rect(90, 180, 5, 30)
-        lcd_display.draw_lines([[160,320 - 30], [180, 320 - 50], [220, 320 - 60]], self.color)
-        lcd_display.draw_lines([[160,30], [180, 50], [220, 60]], self.color)
+        self.draw_ellipse(220 + x_offset, 180 + y_offset, 30, 20)
+        self.draw_ellipse(210 + x_offset, 161 + y_offset, 40, 30, white)
+        self.draw_rect(90 + x_offset, 190 + y_offset, 130, 12)
+        self.draw_rect(90 + x_offset, 180 + y_offset, 5, 30)
+        lcd_display.draw_lines([[160 + x_offset, (320 - 30) + y_offset], 
+                                [180 + x_offset, (320 - 50) + y_offset], 
+                                [220 + x_offset, (320 - 60) + y_offset]], 
+                                self.color)
+        lcd_display.draw_lines([[160 + x_offset, 30 + y_offset], 
+                                [180 + x_offset, 50 + y_offset], 
+                                [220 + x_offset, 60 + y_offset]], 
+                                self.color)
     
-    def creep(self):
+    def creep(self, x_offset=0, y_offset=0):
         white = color565(255,255,255)
         lcd_display.fill_hrect(0, 0, 240, 320, white)
 
         # Eyes
-        self.draw_rect(40, 80, 100, 30)
-        self.draw_rect(45, 85, 90, 20, white)
-        self.draw_rect(70, 85, 40, 20)
-        self.draw_rect(180, 80, 100, 30)
-        self.draw_rect(185, 85, 90, 20, white)
-        self.draw_rect(210, 85, 40, 20)
+        self.draw_rect(40 + x_offset, 80 + y_offset, 100, 30)
+        self.draw_rect(45 + x_offset, 85 + y_offset, 90, 20, white)
+        self.draw_rect(70 + x_offset, 85 + y_offset, 40, 20)
+        self.draw_rect(180 + x_offset, 80 + y_offset, 100, 30)
+        self.draw_rect(185 + x_offset, 85 + y_offset, 90, 20, white)
+        self.draw_rect(210 + x_offset, 85 + y_offset, 40, 20)
 
         # Eyebrows
-        self.draw_rect(40, 60, 100, 10)
-        self.draw_rect(180, 60, 100, 10)
-        lcd_display.draw_lines([[60, 320 - 30], [50, 320 -  40], [45, 320 - 60]], self.color)
-        lcd_display.draw_lines([[60, 30], [50, 40], [45, 60]], self.color)
+        self.draw_rect(40 + x_offset, 60 + y_offset, 100, 10)
+        self.draw_rect(180 + x_offset, 60 + y_offset, 100, 10)
+        lcd_display.draw_lines([[60 + x_offset, (320 - 30) + y_offset], 
+                                [50 + x_offset, (320 -  40) + y_offset], 
+                                [45 + x_offset, (320 - 60) + y_offset]], 
+                                self.color)
+        lcd_display.draw_lines([[60 + x_offset, 30 + y_offset], 
+                                [50 + x_offset, 40 + y_offset], 
+                                [45 + x_offset, 60 + y_offset]], 
+                                self.color)
 
         # Mouth
-        self.draw_ellipse(160, 160, 100, 40)
-        self.draw_ellipse(160, 160, 80, 30, white)
-        self.draw_rect(60, 120, 200, 40, white)
+        self.draw_ellipse(160 + x_offset, 160 + y_offset, 100, 40)
+        self.draw_ellipse(160 + x_offset, 160 + y_offset, 80, 30, white)
+        self.draw_rect(60 + x_offset, 120 + y_offset, 200, 40, white)
 
-    def happy(self):
+    def happy(self, x_offset=0, y_offset=0):
         white = color565(255,255,255)
         lcd_display.fill_hrect(0, 0, 240, 320, white)
 
         # Eyes
-        self.draw_ellipse(90, 100, 50, 10)
-        self.draw_ellipse(90, 100, 45, 5, white)
-        self.draw_ellipse(230, 100, 50, 10)
-        self.draw_ellipse(230, 100, 45, 5, white)
-        self.draw_rect(40, 100, 240, 15, white)
+        self.draw_ellipse(90 + x_offset, 100 + y_offset, 50, 10)
+        self.draw_ellipse(90 + x_offset, 100 + y_offset, 45, 5, white)
+        self.draw_ellipse(230 + x_offset, 100 + y_offset, 50, 10)
+        self.draw_ellipse(230 + x_offset, 100 + y_offset, 45, 5, white)
+        self.draw_rect(40 + x_offset, 100, 240 + y_offset, 15, white)
 
         # Eyebrows
-        self.draw_ellipse(80, 60, 60, 10)
-        self.draw_ellipse(80, 60, 55, 5, white)
-        self.draw_ellipse(240, 60, 60, 10)
-        self.draw_ellipse(240, 60, 55, 5, white)
-        self.draw_rect(20, 60, 280, 15, white)
-        self.draw_rect(55, 50, 210, 5)
-        self.draw_rect(130, 50, 60, 20, white)
+        self.draw_ellipse(80 + x_offset, 60 + y_offset, 60, 10)
+        self.draw_ellipse(80 + x_offset, 60 + y_offset, 55, 5, white)
+        self.draw_ellipse(240 + x_offset, 60 + y_offset, 60, 10)
+        self.draw_ellipse(240 + x_offset, 60 + y_offset, 55, 5, white)
+        self.draw_rect(20 + x_offset, 60 + y_offset, 280, 15, white)
+        self.draw_rect(55 + x_offset, 50 + y_offset, 210, 5)
+        self.draw_rect(130 + x_offset, 50 + y_offset, 60, 20, white)
 
         # Mouth
-        self.draw_ellipse(160, 160, 100, 40)
-        self.draw_ellipse(160, 160, 90, 35, white)
-        self.draw_rect(60, 120, 200, 40, white)
-        self.draw_rect(60, 160, 200, 5)
-        lcd_display.draw_lines([[160,320 - 30], [180, 320 - 50], [220, 320 - 60]], self.color)
-        lcd_display.draw_lines([[160,30], [180, 50], [220, 60]], self.color)
+        self.draw_ellipse(160 + x_offset, 160 + y_offset, 100, 40)
+        self.draw_ellipse(160 + x_offset, 160 + y_offset, 90, 35, white)
+        self.draw_rect(60 + x_offset, 120 + y_offset, 200, 40, white)
+        self.draw_rect(60 + x_offset, 160 + y_offset, 200, 5)
+        lcd_display.draw_lines([[160 + x_offset, (320 - 30) + y_offset], 
+                                [180 + x_offset, (320 - 50) + y_offset], 
+                                [220 + x_offset, (320 - 60) + y_offset]], 
+                                self.color)
+        lcd_display.draw_lines([[160 + x_offset, 30 + y_offset], 
+                                [180 + x_offset, 50 + y_offset], 
+                                [220 + x_offset, 60 + y_offset]], 
+                                self.color)
+        
+    def blank(self):
+        white = color565(255,255,255)
+        lcd_display.fill_hrect(0, 0, 240, 320, white)
 
 if __name__ == "__main__":
     f = Faces(color565(0,0,0))
