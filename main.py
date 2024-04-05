@@ -6,7 +6,7 @@ import asyncio
 
 from states import Base_State, Workout
 from component_classes import Components
-from exercise import Exercise
+from exercise import Exercise, font
 
 print('Initializing Components')
 
@@ -60,7 +60,6 @@ colors = colors_rgb
 sd = components.sd_card()
 lcd_display = components.lcd_display()
 # TODO: Had to disable for now 
-font = XglcdFont('TimesNR28x25.h', 28, 25)
 
 ultrasonic_sensor = components.ultrasonic_sensor()
 # distance = ultrasonic_sensor.distance_cm()
@@ -70,7 +69,7 @@ pot_max = 65535
 pot_min = 208
 pot_diff = pot_max - pot_min
 
-microphone = components.microphone()
+# microphone = components.microphone()
 
 led = Pin('LED', Pin.OUT)
 baseline = 25000 # You may need to change this, but your mic should be reading around here as a baseline. 
@@ -218,11 +217,11 @@ async def main():
         # Set state_actions() to run in the background.
         asyncio.create_task(state_actions())
 
-        # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
-        if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
-            led.on() # Turn the light on if we're detecting a spike
-        else:
-            led.off() # Otherwise, keep the light off
+        # # If we detect a spike in the waveform greater than a 10% deviation from our baseline, someone is probably talking.
+        # if microphone.read_u16() > (baseline + baseline*variability) or microphone.read_u16() < (baseline - baseline*variability):
+        #     led.on() # Turn the light on if we're detecting a spike
+        # else:
+        #     led.off() # Otherwise, keep the light off
         
         # Menus for selecting:
         # 1. Category of exercise (Calisthenics)
@@ -230,12 +229,22 @@ async def main():
         # 3. Exercise (Pushups/Dips/Decline_Pushups/etc)
         # 4. Whether exercise should be timed or counted by reps.
         selection = await menu(menu_options)
+        if selection == 'Exit':
+            continue
         program = await menu(menu_options[selection])
+        if program == 'Exit':
+            continue
         exercise_name = await menu(menu_options[selection][program])
+        if exercise_name == 'Exit':
+            continue
         exercise_type = await menu(['Timed', 'Reps'])
+        if exercise_type == 'Exit':
+            continue
 
         if (exercise_type == 'Timed'):
             exercise_time = await menu([30, 60, 90, 120])
+            if exercise_time == 'Exit':
+                continue
             working_out = True
             await exercise_name.timed_exercise(exercise_time)
         else:
